@@ -1,0 +1,7 @@
+g4f
+Flask
+googletrans
+Jinja2
+aiohttp
+aiosignal
+attrs

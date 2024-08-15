@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>Brainwave | AI Chat</title>
+    <link rel="stylesheet" href="static/css/style-chat.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        * {
+            box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2a2a2a; /* Dark background */
+            margin: 0;
+            height: 100vh; /* Full height */
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            flex: 1; /* Take up remaining space */
+            background: #333; /* Darker grey for chat area */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Enable vertical scrolling */
+            margin: 0; /* Remove margin */
+            padding: 10px; /* Padding for inner content */
+            position: relative; /* Positioning context for default message */
+        }
+        .typing-container {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #444; /* Lighter border */
+            background: #444; /* Dark background for typing area */
+        }
+        .typing-textarea {
+            flex: 1;
+            margin-right: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #555; /* Darker border */
+            border-radius: 5px;
+            padding: 10px;
+            resize: none;
+            outline: none; /* Remove outline on focus */
+            background-color: #222; /* Dark background for textarea */
+            color: #fff; /* Light text color */
+        }
+        #send-btn, #new-chat-btn {
+            cursor: pointer;
+            color: #4CAF50;
+            font-size: 24px;
+            margin-left: 10px; /* Space between buttons */
+        }
+        #new-chat-btn {
+            display: flex;
+            align-items: center;
+        }
+        .chat-message {
+            padding: 10px;
+            border-bottom: 1px solid #444; /* Lighter border */
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .chat-message.user {
+            justify-content: flex-end; /* Align user messages to the right */
+        }
+        .chat-message.ai {
+            justify-content: flex-start; /* Align AI messages to the left */
+        }
+        .message-content {
+            border-radius: 5px;
+            padding: 10px;
+            max-width: 75%; /* Limit message width */
+            word-wrap: break-word; /* Ensure long words wrap correctly */
+            position: relative; /* Positioning context for the copy button */
+            display: flex; /* Flex container for content and button */
+            align-items: center; /* Center align items vertically */
+        }
+        .message-content.user {
+            background-color: #4CAF50; /* User message background */
+            color: white; /* User text color */
+            margin-left: auto; /* Push to the right */
+        }
+        .message-content.ai {
+            background-color: #FF9800; /* AI message background */
+            color: white; /* AI text color */
+            margin-right: auto; /* Push to the left */
+        }
+        .user-icon, .ai-icon {
+            margin: 0 10px;
+        }
+        .user-icon {
+            font-size: 24px; /* Adjust size of user icon */
+            color: #4CAF50; /* User icon color */
+        }
+        .ai-icon {
+            font-size: 24px; /* Adjust size of AI icon */
+            color: #FF9800; /* AI icon color */
+        }
+        #new-chat-btn {
+            background-color: transparent; /* Transparent background for the icon button */
+            border: none;
+            color: #4CAF50; /* Match color with the send button */
+            cursor: pointer;
+            font-size: 24px; /* Match size with send button */
+            padding: 0; /* Remove padding */
+            margin-left: 10px; /* Space from send button */
+        }
+        #new-chat-btn:hover {
+            color: #45a049; /* Darker shade on hover */
+        }
+        .default-message {
+            color: #bbb; /* Light grey for the default message */
+            text-align: center; /* Center the message */
+            margin-top: 20px; /* Space from top */
+        }
+        pre {
+            background-color: #222; /* Dark background for code block */
+            color: #fff; /* Light text color for code */
+            padding: 10px; /* Padding around code */
+            border-radius: 5px; /* Rounded corners */
+            overflow: auto; /* Enable scrolling for long code */
+            white-space: pre-wrap; /* Wrap long lines */
+        }
+        code {
+            white-space: pre; /* Preserve whitespace */
+        }
+        .copy-btn {
+            background-color: transparent; /* Transparent background */
+            color: rgb(0, 0, 0); /* Icon color */
+            border: none; /* No border */
+            cursor: pointer; /* Pointer cursor */
+            margin-left: 10px; /* Space between message and button */
+            font-size: 20px; /* Font size for icon */
+        }
+        .copy-btn:hover {
+            color: #FFEB3B; /* Change color on hover */
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container" id="chat-container">
+    <div id="default-message" class="default-message">
+        Welcome to Brainwave AI !! <br>
+
+        Type your prompt in the box below to start chatting.
+    </div>
+</div>
+
+<div class="typing-container">
+    <div class="typing-textarea">
+        <textarea id="chat-input" spellcheck="false" placeholder="Enter your prompt here" required></textarea>
+    </div>
+    <span id="send-btn" class="material-symbols-rounded">send</span>
+    <button id="new-chat-btn" class="material-symbols-rounded">add</button> <!-- New chat button with icon -->
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Display the initial AI message after the default greeting
+        const initialAIMessage = "How may I help you?";
+        addMessage(initialAIMessage, 'ai'); // Call the function to add AI message
+    });
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('chat-input').addEventListener('keypress', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevent new line on enter
+            sendMessage();
+        }
+    });
+
+    document.getElementById('new-chat-btn').addEventListener('click', function() {
+        document.getElementById('chat-container').innerHTML = ''; // Clear chat container
+        document.getElementById('chat-container').appendChild(document.getElementById('default-message')); // Re-add default message
+        document.getElementById('chat-input').value = ''; // Clear input field
+    });
+
+    function sendMessage() {
+        const inputField = document.getElementById('chat-input');
+        const content = inputField.value.trim();
+
+        if (content) {
+            document.getElementById('default-message').style.display = 'none'; // Hide default message on first interaction
+            addMessage(content, 'user');
+            inputField.value = '';
+
+            // Send AJAX request to server
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ content })
+            })
+            .then(response => response.text())
+            .then(data => {
+                addMessage(data, 'ai');
+            })
+            .catch(error => {
+                addMessage("Error: " + error, 'ai');
+            });
+        }
+    }
+
+    function addMessage(content, role) {
+        const chatContainer = document.getElementById('chat-container');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ' + role;
+
+        // Create message content with icon
+        const iconSpan = document.createElement('span');
+        iconSpan.className = role === 'user' ? 'material-symbols-rounded user-icon' : 'material-symbols-rounded ai-icon';
+        iconSpan.textContent = role === 'user' ? 'person' : 'computer'; // Change icons as needed
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content ' + role;
+
+        // Check if the content is a code snippet
+        if (content.startsWith("```") && content.endsWith("```")) {
+            const code = content.slice(3, -3).trim(); // Remove the ``` from start and end
+            contentDiv.innerHTML = `<pre><code>${escapeHtml(code)}</code></pre>`; // Escape HTML to prevent XSS
+        } else {
+            contentDiv.textContent = content; // Regular text message
+        }
+
+        // Add copy button for AI responses
+        if (role === 'ai') {
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-btn';
+            copyButton.innerHTML = '<span class="material-symbols-rounded">content_copy</span>'; // Use copy icon
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert("Copied to clipboard!");
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            };
+            contentDiv.appendChild(copyButton); // Append copy button to message content
+        }
+
+        messageDiv.appendChild(iconSpan);
+        messageDiv.appendChild(contentDiv);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+    }
+
+    // Function to escape HTML to prevent XSS attacks
+    function escapeHtml(html) {
+        const text = document.createElement('span');
+        text.textContent = html;
+        return text.innerHTML;
+    }
+</script>
+
+</body>
+</html>
